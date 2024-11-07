@@ -1,0 +1,117 @@
+@mixin font($font-family, $font-file) {
+  @font-face {
+    font-family: $font-family;
+    src: url($font-file + '.eot');
+    src:
+      url($font-file + '.eot?#iefix') format('embedded-opentype'),
+      url($font-file + '.woff') format('woff'),
+      url($font-file + '.ttf') format('truetype'),
+      url(#{$font-file}.otf) format('opentype'),
+      url($font-file + '.svg#' + $font-family) format('svg');
+    font-weight: normal;
+    font-style: normal;
+  }
+}
+
+//REM
+@function toRem($px) {
+  $result: calc($px/ 16) + rem;
+  @return $result;
+}
+//EM
+@function em($px, $current: 16) {
+  $result: calc($px / $current) + em;
+  @return $result;
+}
+
+//Currency
+@mixin currency($sym) {
+  &::after {
+    content: '#{$sym}';
+  }
+}
+
+// Grids
+@mixin gridCards($type: fit, $min: 280px, $max: 1fr, $gap: 30px) {
+  display: grid;
+  gap: $gap;
+  grid-template-columns: repeat(auto-#{$type}, minmax($min, $max));
+}
+
+// Адаптивна властивість (clamp)
+@mixin adaptiveValue(
+  $property,
+  $startSize,
+  $minSize,
+  $keepSize: 0,
+  $widthFrom: $containerWidth,
+  $widthTo: $minWidth
+) {
+  @if ($startSize==0) {
+    $startSize: 0.000001;
+  }
+  @if ($minSize==0) {
+    $minSize: 0.000001;
+  }
+
+  // Для calc();
+  $addSize: calc(calc($startSize - $minSize) / 16);
+
+  @if ($widthFrom == $containerWidth and $maxWidthContainer == 0) {
+    $widthFrom: $maxWidth;
+  }
+
+  // Брейк-поїнти в EM
+  $widthFromMedia: em($widthFrom);
+  $widthToMedia: em($widthTo);
+
+  // Формула плаваючого значення
+  // Источник: https://css-tricks.com/linearly-scale-font-size-with-css-clamp-based-on-the-viewport/
+  $slope: calc(calc($startSize - $minSize) / calc($widthFrom - $widthTo));
+  $yIntersection: #{(-$widthTo * $slope) + $minSize};
+  @if ($yIntersection==0) {
+    $yIntersection: 0.000001;
+  }
+  $flyValue: #{toRem($yIntersection)}' + ' #{$slope * 100}vw;
+
+  // Отримання значення властивості
+  $propertyValue: #{'clamp(' toRem($minSize) ',' $flyValue ',' toRem($startSize)
+    ')'};
+  // Якщо негативні значення
+  @if ($minSize > $startSize) {
+    $propertyValue: #{'clamp('
+      toRem($startSize)
+      ','
+      $flyValue
+      ','
+      toRem($minSize)
+      ')'};
+  }
+
+  // Встановлюємо значення за замовчуванням
+  @if $keepSize != 1 and $keepSize != 3 {
+    @media (min-width: $widthFromMedia) {
+      #{$property}: toRem($startSize);
+    }
+  }
+  // Адаптуємо розмір у проміжку між зазначеними ширинами в'юпорту
+  @media (min-width: $widthToMedia) and (max-width: $widthFromMedia) {
+    // Якщо підтримується clamp();
+    @supports (#{$property}: $propertyValue) {
+      #{$property}: $propertyValue;
+    }
+    // Якщо не підтримується clamp();
+    @supports not (#{$property}: $propertyValue) {
+      #{$property}: calc(
+        #{toRem($minSize)} + #{$addSize} * (100vw - #{toRem($widthTo)}) / #{(
+            calc($widthFrom/16)
+          ) - calc($widthTo / 16)}
+      );
+    }
+  }
+  @if $keepSize != 1 and $keepSize != 2 {
+    @media (max-width: $widthToMedia) {
+      #{$property}: toRem($minSize);
+    }
+  }
+}
