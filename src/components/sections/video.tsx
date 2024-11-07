@@ -10,7 +10,10 @@ function Video() {
       const headers = gsap.utils.toArray('.header-h1-wrapper > h1');
 
       gsap.set(headers, { transformStyle: 'preserve-3d' });
-      gsap.set(ref.current, { transformOrigin: 'bottom center' });
+      gsap.set(ref.current, {
+        transformOrigin: 'bottom center',
+        willChange: 'transform ',
+      });
 
       const tl = gsap.timeline({
         defaults: { ease: 'power3.out' },
