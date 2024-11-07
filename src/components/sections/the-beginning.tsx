@@ -13,7 +13,10 @@ function TheBeginning() {
   const ref = useRef<HTMLElement>(null);
 
   const animation = () => {
-    gsap.set('.beginning__title-wrapper', { pointerEvents: 'none' });
+    gsap.set('.beginning__title-wrapper', {
+      pointerEvents: 'none',
+      willChange: 'transform ',
+    });
 
     const animateMain = (selector: string, vars?: GSAPTweenVars) => {
       const tl = gsap.timeline({
